@@ -1,0 +1,55 @@
+
+VERSIONS
+
+Arduino IDE 1.8.19
+Boards Manager: esp32 3.0.5
+Library Manager: Adafruit VS1053 1.3.0 (1.3.2 available)
+Library Manager: tablatronix 2.0.17
+
+
+TODO
+
+DAY 1
+
+(1) Audio out test
+Run Jen's test code first to see if everything works
+Need to setup the SSID, password, icecast server, etc.
+
+(2) List the command code differences between the VS1053 and VS1063
+Make a custom version of the Adafruit VS1053 library with VS1063 stuff added
+
+DAY 2
+
+(3) WiFi Manager tests
+Run some of the examples to get different parameters, etc.
+Once we are connected to a WiFi network, we will still want to configure the device
+remotely. Do we want a second HTTP page for this? In which case the toolkit needs
+to advertise itself on the local network in a way that is super easy to find.
+Can the ESP32 run a SSID based hotspot and be connected to a local WiFi network
+at the same time ??
+
+DAY 3
+
+(4) Audio input test
+Record audio from the VS1063 in mp3 mode and send it to the serial port.
+Grab it on the console and play it back.
+
+(5) Icecast Client
+Either use an existing HTTP library or write a quick Icecast library
+Pull audio from the VS1063 in mp3 mode and send it out
+
+DAY 4
+
+(6) Test the VLSI improved mp3 encoder patch
+
+DAY 5
+
+(7) We will probably want an http+ws server (or maybe just a ws server) on the
+toolkit for config and monitoring. That way we can send out volume levels, etc.
+OR simply use telnet VT52 or VT100 with ascii art!!
+
+DAY 6
+
+(8) Figure out the SPRAM thing .. what's it doing, how do we control it, etc.
+Can we store web pages, VLSI patches, waveform files, etc. ??
+
