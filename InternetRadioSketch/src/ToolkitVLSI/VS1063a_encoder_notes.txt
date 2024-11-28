@@ -1,0 +1,103 @@
+
+Chapter 11.6 of the Data Sheet
+------------------------------
+
+Encoding Control Registers
+
+SCI_MODE    bits 2,12,14 SM_RESET, SM_ENCODE, SM_LINE1
+    Line 1 instead of mic is used if SM_LINE1 is set
+
+SCI_AICTRL0 bits 15:0 Sample Rate 8000 - 48000 (read at encoding startup)
+
+SCI_AICTRL1 bits 15:0 Gain 1024=1x 0=AGC
+    gain is SCI_AICTRL1/1024
+
+SCI_AICTRL2 Max autogain 1024=1x, 65535=64x
+
+SCI_AICTRL3 15 codec mode (enable SDI data encoded to HDAT0 HDAT1)
+            14 AEC enable (Acoustic Echo Cancellation)
+            13 UART (8N1) TX enable (Send encoded data out the serial port)
+                setup parametric_x.i.encoding for serial port params
+            12 reserved, set to 0
+            11 Pause enable
+            10 No RIFF WAV header inserted (or expected)
+            8:9 reserved set to 0
+            7:4 encoding format 0 .. 6
+                0=IMA ADPCM, 1=PCM, 5=Ogg, 6=MP3
+            3 reserved set to 0
+            2:0 ADC mode 0 .. 4
+                0=joint stereo (common AGC), 1=dual stereo (separate AGC),
+                2=left channel, 3=right channel, 4=mono mix
+
+SCI_WRAMADDR bits 15:0 Quality/bit rate selection for Ogg and MP3
+    Use 0xe080 for CBR 128kbps
+            15:14 bitrate mode 0=quality mode, 1=VBR, 2=ABR, 3=CBR
+            13:12 bit rate multiplier 0=10,1=100,2=1000,3=10000
+            11 ogg specific
+            10 mp3: 1=do not use bit-reservoir (bit reservoir is 1 frame back)
+            9 set to 0
+            8:0 bit rate base 0 to 511 (or quality 0 to 9 in quality mode)
+
+IF you use VS1063a Patches:
+    activate encoding mode by first setting the bit SM_ENCODE in SCI_MODE
+    then write 0x50 to SCI_AIADDR
+
+IF NOT using patches:
+    set bits SM_RESET and SM_ENCODE in SCI_MODE
+
+BEFORE ACTIVATING the encoder:
+    the use MUST write values to SCI_AICTRL0, SCI_AICTRL3, and SC_WRAMADDR
+    these values are only read at encoding startup
+    SCI_AICTRL1 and SCI_AICTRL2 can be altered at anytime.
+
+-----------------------------------------------------------------------------
+11.6.2 THE ENCODING PROCEDURE
+
+1. Load the patches package
+
+2. Set
+    SCI_CLOCKF to 4.5x (for all encoders except Ogg) 4.5x is default
+    see 11.6.9,11.13
+
+    SCI_AICTRL0 thru 3
+    SCI_WRAMADDR
+
+    Activate encoding for the patches or not
+
+3. Recording
+    read data through SCI_HDAT0/SCI_HDAT1
+    see 11.6.3
+    SCI_HDAT1 contains number of 2 byte words available (or 0 if none)
+    SCI_HDAT0 contains big-endian 2 byte words of data, read until HDAT1 is 0
+
+4 Finalizing
+    set SM_CANCEL in SCI_MODE
+    wait 100 ms
+    read all remaining words from SCI_HDAT0/SCI_HDAT1
+    wait 100ms
+    soft reset
+
+Example on Page 62 ****
+
+    LoadUserCode(vs1063apatch);
+    WriteVS10xxRegister(SCI_AICTRL0, 44100U);   // 44100Hz
+    WriteVS10xxRegister(SCI_AICTRL1, 1024U);    // manual gain 1.0x
+    WriteVS10xxRegister(SCI_AICTRL2, 4096U);    // AGC max gain 4.0x (not used)
+    WriteVS10xxRegister(SCI_AICTRL3, 0x60);     // mp3, joint stereo
+
+    WriteVS10xxRegister(SCI_WRAMADDR, 0xE080);  // 128kbps
+
+    NOTE: we are loading WRAMADDR with a value but we are NOT doing subsequent
+    WRAM access on this address value. The value is read at encoder startup,
+    so no WRAM access occurs at all. Thus the value can be anything and it
+    won't trash any WRAM data.
+
+    uint16_t mode = ReadVS10xxRegister(SCI_MODE);
+    mode = mode | SM_ENCODE | SM_LINE1;
+    WriteVS10xxRegister(SCI_MODE, mode);
+    WriteVS10xxRegister(SCI_AIADDR, 0x50);      // start recording
+
+    Standard sample rates are: 32000, 44100, 48000
+
+-----------------------------------------------------------------------------
+Monitoring. SCI_VOL can be changed during encoding to change monitoring volume

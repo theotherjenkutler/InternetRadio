@@ -1,0 +1,125 @@
+
+(1) .. maybe we can fix the bug when reconnecting to the AP on a phone
+
+If the AP login page is still sitting in the browser then it assumes
+that everything is already loaded and doesn't do a new load event.
+
+window.addEventListener("focus", function(event)
+{
+    // check to make sure the WS is running and has updated settings
+}, false);
+
+------------------------------------------------------------------------------
+(2)
+Add Kiosk mode
+
+How about this:
+
+if the transmit icy url == "" then we don't connect to the icy server
+
+transmitter mode streams to icecast and does config page
+
+kiosk mode streams to icecase and does config for 2 mins, then kiosk
+
+- boots in the same way as transmitter mode
+- waits for 2 minutes and then switches from configuration mode to kiosk mode
+- while in configuration mode you can set the mode back to transmitter and then
+it will stay in config mode
+- while in transmitter mode you can switch to kiosk and it will switch in
+30 seconds
+
+
+------------------------------------------------------------------------------
+(3)
+FIX .. what do we do when we have no SPIFFS or settings on startup?
+Can we boot up in wait mode with some default settings and a hardcoded
+index.html page?
+
+How about an upload page. It can even upload over the WS connection?
+Our largest page should be under 16kB, which means we can send medium
+sized WS packets for uploads.
+
+Or we could support both SPIFFS and LittleFS
+include <LITTLEFS.h>
+LITTLEFS replaces all references to SPIFFS
+so we could make a FS pointer that can be set to the working filesystem.
+
+------------------------------------------------------------------------------
+(DONE)
+Some of the captive portal page commands need to be "live"
+
+- listening volume .. can be changed in realtime
+
+- can the agc/manual volume be changed during a recording?
+SCI_AICTRL1 - 16 bits encoder gain 1024 = 1.0 or 0 for AGC
+SCI_AICTRL2 - 16 bits max AGC 1024 = 1.0, 64x-1 is the maximum
+
+- changing between Transmitter and Kiosk mode could be done in realtime
+  (see below)
+
+------------------------------------------------------------------------------
+(DONE)
+
+Echo WS settings messages to all WS connections to keep all clients in sync
+
+THIS means redoing a bunch of code, since some of it is static and some
+is part of the non-static buy single ToolkitWiFi code
+
+boolean websocket_handleIncoming(const char *buffer, size_t size)
+    // then we an also handle the messages that cause "live" updates
+    // volume, ..
+
+needs to become part of ToolkitWiFi .. then we can add
+a send to other WS connections function (name, value)
+using websocket_sendString(twfc, const char *)
+
+------------------------------------------------------------------------------
+(DONE)
+
+Do we miss server requests because the packets are either split or merged?
+This might be why the captive portal breaks once in a while.
+
+ALSO we close the http socket right away and don't allow the browser to
+reuse it .. might make sense to have a timeout for that so that the
+socket stays open unless it hasn't been used for a few milliseconds.
+
+(a) update the http request receiver code to check for multiple requests
+
+(b) keep the connection open for 1 second beyond the last request.
+It should probably be set back to type UNKNOWN once a request has been
+handled.
+
+------------------------------------------------------------------------------
+(MAYBE NOT NEEDED) now that the streaming code is fixed
+sometimes it is better to let the driver do what it likes to do.
+
+client.setNoDelay(true);  // set this on the icy and mp3 clients
+
+------------------------------------------------------------------------------
+(DONE)
+
+set encoder and listener task priorities to 2
+(so that they don't get stalled by the WiFi streaming)
+
+move WiFi server task and icecast reconnect tasks to CPU 0
+
+increase WiFi server head size .. seems to clear up the stalling on
+the WiFi writes .. maybe there is some weird swap stuff going on with
+the big buffers once they have been passed to the esp32 WiFi code.
+
+------------------------------------------------------------------------------
+(DONE) .. prints out an error message if we timeout
+
+size_t client.write(data, size) // check the actual bytes sent
+
+------------------------------------------------------------------------------
+(DONE)
+
+Changed buffer stream to hold 3 seconds at 128kbps.
+
+It is a rotating buffer that will write over itself if the outgoing
+stream doesn't run fast enough.
+
+Outgoing stream runs 2 or more buffers behind the incoming stream.
+
+------------------------------------------------------------------------------

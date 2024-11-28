@@ -1,0 +1,31 @@
+
+VS1053
+    System starts in 1.0x clock mode
+    SPI clock full wave is 4 CLKI cycles
+    CLKI = onboard crystal * CLOCKF multiplier
+
+    It takes 5 ns from CS down before we can raise the SCK
+    (5ns is 200MHz half wave)
+    It take 1 CLKI cycle at the end before we can raise CS
+
+    Adafruit change the clock to 3.0x
+    sciWrite(VS1053_REG_CLOCKF, 0x6000);
+    Maximum SCK 9.216 MHz
+
+VS1063
+    System starts in 1.0x clock mode
+    SPI clock full wave is 4 CLKI cycles
+    CLKI = onboard crystal * CLOCKF multiplier
+
+    Timing is the same as for the VS1053
+
+    Maximum SCK frequency at startup 3.072 MHz
+    Maximum SCK at 5.5x 16.896 MHz
+
+    When changing the clock speed, wait a bit for it to settle.
+
+    12 MHz seems to be the fastest SCK we can run
+    192kbps reads 4096 bytes in 25 ms
+
+    10 MHz reads in 26 ms
+    8 MHz reads in 28 ms

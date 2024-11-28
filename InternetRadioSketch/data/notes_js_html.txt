@@ -1,0 +1,70 @@
+
+(1) WS messages can be ..
+
+<setting_name> <value>\n
+
+on the c-code end we can:
+strtok(buffer, " ");
+strtok(NULL, "\n");
+strtok(NULL, " ");
+strtok(NULL, "\n");
+etc.
+
+on the JS end we can:
+split on \n to get an array of pairs
+split on " " to get an array of name, value
+
+(2) password input field can change type on focus
+onfocus -> text
+onblur -> password
+
+(3) input fields can
+onchange=settingChange(id, settingName, precision)
+    in the JS code ..
+        if (precision exists) .. it is a number
+            if (precision is not 0) .. it is a float
+
+OR make id the same as settingName .. then it is
+onchange=setting(id, precision)
+
+onfocus=focusText(id) .. if password change to text
+onblur=blurPassword(id) .. if text change to password
+
+(4) kiosk mode .. loads kiosk.html instead of index.html
+
+(5) when we load the html page
+    It should wait for a second (for all the spam requests to go through)
+    and then it should load the Javascript file(s)
+    and then it should open the WS connection
+
+    // var head  = document.getElementsByTagName('head')[0];
+    var link  = document.createElement('link');
+    link.id   = 'toolkitcss';
+    link.rel  = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'toolkit.css';
+    link.media = 'all';
+    document.head.appendChild(link);
+    // not sure if/when it becomes active
+
+    var script = document.createElement('script');
+    script.id = "toolkitscript";
+    script.type="text/javascript"
+    script.src = "toolkit.js"
+    OR script.setAttribute('src','toolkit.js');
+    document.body.appendChild(script);
+
+    <script>
+        window.setTimeout(function() {
+            // load our css and js files in here
+        }, 2000);
+
+        // OR
+
+        const loadTimeout = setTimeout(loadAfterDelay, 2000);
+        function loadAfterDelay() {
+            clearTimeout(loadTimeout);
+            // load stuff
+        }
+
+    </script>

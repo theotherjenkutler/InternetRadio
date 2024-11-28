@@ -1,0 +1,99 @@
+/*
+	Define command elements for our resizeable style.
+*/
+
+/*	BODY	*/
+
+body {
+/*    font-family: arial, helvetica, serif; */
+    font-family: Inter,-apple-system,system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size: 14px; /*80%;*/
+	line-height: 27px; /*1.4em;*/
+	letter-spacing: 0.06em;
+    background-color: #001640;
+	color: #cccccc;
+    margin: 0;
+        border: 0;
+            padding: 0;
+}
+
+a { text-decoration: none; }
+
+
+/* CSS */
+/*.button-42 {*/
+button, input, select {
+  background-color: #0088cc;
+  background-image: linear-gradient(-180deg, #006688, #0088cc);
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0 2px 4px;
+  color: #000000;
+  cursor: text;     // override for different types
+  display: inline-block;
+  font-family: Inter,-apple-system,system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+  height: 24px;
+  line-height: 24px;
+  margin-right: 3px;
+  margin-bottom: 3px;
+  padding-right: 5px;
+  padding-left: 5px;
+  outline: 0;
+  overflow: hidden;
+  padding: 0 20px;
+  pointer-events: auto;
+  position: relative;
+  text-align: center;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: top;
+  white-space: nowrap;
+  width: 200px;
+/*  z-index: 9; */
+  border: 0;
+  transition: box-shadow .2s;
+}
+
+button:hover, input:hover, select:hover {
+  box-shadow: rgba(253, 76, 0, 0.5) 0 3px 8px;
+}
+
+button:active {
+   background-image: linear-gradient(-180deg, #ff6688, #0088cc);
+}
+
+button {
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    height: 16px;
+    line-height: 16px;
+    width: 24px;
+}
+
+input[type="number"] {
+    width: 140px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button { margin-left: 15px; }
+
+:focus { outline: none; }
+:active { outline: none; }
+
+.div_master {
+    margin: 0;
+         border: 0;
+              padding: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    visibility: visible;
+    display: block;
+    z-index: 0;
+}
+
+/* END OF STYLE SHEET */

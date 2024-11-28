@@ -1,0 +1,127 @@
+
+(1) Response from wgxc icecast server when listening
+
+HTTP/1.0 200 OK
+Server: Icecast 2.4.4
+Connection: Close
+Date: Wed, 13 Nov 2024 20:17:20 GMT
+Content-Type: audio/mpeg
+Cache-Control: no-cache, no-store
+Expires: Mon, 26 Jul 1997 05:00:00 GMT
+Pragma: no-cache
+icy-br:128
+ice-audio-info: ice-bitrate=128;ice-channels=2;ice-samplerate=44100
+icy-description:Radio for Open Ears
+icy-genre:(null)
+icy-name:WGXC 90.7-FM
+icy-pub:0
+icy-url:(null)
+
+(2) Infinite header
+
+Old school method was to use a Content-length:-1 (for HTTP/1.0)
+"Content-length: 65536\r\n\r\n"
+
+New system is to NOT send Content-length:
+
+Reply to MP3 requests with
+
+HTTP/1.1 200 OK
+Content-Type: audio/mpeg
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+
+
+
+(3) ICECAST transmit
+
+//----------------------------------------------------------------------------------
+//
+// icy
+//
+
+static int net_socket = -1;
+
+static bool do_icy_test()
+{
+	char request[512];
+     dnet_icy_make_request(request, prefs_getIcyURL(), prefs_getIcyPort(), prefs_getIcyUser(), prefs_getIcyPass(), prefs_getIcyMount());
+     printf("%s\n", request);
+
+     if (DNET_SOCK_OKAY != dnet_tcp_openclient(&net_socket, prefs_getIcyURL(), prefs_getIcyPort(), 30000000)) {
+     	printf("Error opening connection to server!\n");
+          net_socket = -1;
+          return false;
+     }
+
+     int32_t request_length = strlen(request);
+     int32_t actual = dnet_tcp_write(net_socket, request, request_length);
+     if (actual < 0) {
+     	printf("Error writing to server!\n");
+          dnet_close(net_socket);
+          net_socket = -1;
+          return false;
+     }
+     if (actual != request_length) {
+     	printf("Not all request data written to server!\n");
+          dnet_close(net_socket);
+          net_socket = -1;
+          return false;
+     }
+
+     sleep(2);
+
+     char reply[1024];
+
+     actual = dnet_tcp_read(net_socket, reply, 1023);
+     if (actual < 0) {
+     	printf("Error reading reply from server!\n");
+          dnet_close(net_socket);
+          net_socket = -1;
+          return false;
+     }
+     reply[actual] = 0;
+
+     printf("\nREPLY\n%s\n", reply);
+     return true;
+}
+
+static void icy_check_for_server_message()
+{
+	int available = dnet_available(net_socket);
+     if (available > 0) {
+          char msg[1024];
+          if (available > 1023) available = 1023;
+          int32_t actual = dnet_tcp_read(net_socket, msg, available);
+          if (actual < 0) {
+               printf("Error reading message from server!\n");
+               return;
+          }
+          else if (actual > 0) {
+               msg[actual] = 0;
+               printf("SERVER MESSAGE\n%s\n", msg);
+          }
+     }
+     return;
+}
+
+static void icy_close()
+{
+     dnet_close(net_socket);
+     net_socket = -1;
+}
+
+static bool icy_send(void *buffer, int nbytes)
+{
+	if (net_socket < 0) return false;
+// TODO: we should try a read() in here to check for a -ve (disconnect condition)
+	int32_t actual = dnet_tcp_write(net_socket, buffer, nbytes);
+     if (actual < 0) return false;
+     if (actual != nbytes) {
+     	printf("%d bytes sent out of %d\n", actual, nbytes);
+          // this trips something that causes our program to exit
+          return false; // this seems to work ??
+     }
+	return true;
+}

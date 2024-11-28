@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<link rel="stylesheet" href="toolkit.css">
+<meta name="viewport" content="initial-scale=1">
+<title>Wave Farm - Toolkit</title>
+
+</head>
+
+<!-- START OF BODY -->
+<body><div id="master" class="div_master">
+
+<h1>Wave Farm Toolkit</h1>
+
+<h2>Local WiFi Router:</h2>
+
+<label for="wifi_router_SSID">Router SSID: </label>
+<input type="text" id="wifi_router_SSID"
+    onchange="setting('wifi_router_SSID')" />
+
+<br />
+
+<label for="wifi_router_password">Router Password: </label>
+<input type="password" id="wifi_router_password"
+    onfocus="focusText('wifi_router_password')"
+    onblur="blurPassword('wifi_router_password')"
+    onchange="setting('wifi_router_password')" />
+
+<br />
+
+<label for="wifi_toolkit_hostname">Toolkit Hostname: </label>
+<input type="text" id="wifi_toolkit_hostname"
+    onchange="setting('wifi_toolkit_hostname')" />
+
+<h2>Toolkit Access Point:</h2>
+
+<label for="wifi_toolkit_AP_SSID">Toolkit SSID: </label>
+<input type="text" id="wifi_toolkit_AP_SSID"
+    onchange="setting('wifi_toolkit_AP_SSID')" />
+
+<h2>Listening / Receiving:</h2>
+
+<label for="listen_icecast_url">Icecast URL: </label>
+<input type="text" id="listen_icecast_url"
+    onchange="setting('listen_icecast_url')" />
+
+<br />
+
+<label for="listen_icecast_port">Icecast Port: </label>
+<input type="number" min="0" max="65000" value="8000"
+    id="listen_icecast_port"
+    onchange="setting('listen_icecast_port',0)" />
+
+<br />
+
+<label for="listen_icecast_mountpoint">Icecast Mountpoint: </label>
+<input type="text" id="listen_icecast_mountpoint"
+    onchange="setting('listen_icecast_mountpoint')" />
+
+<br />
+
+<label for="listen_volume">Listening Volume (0.0 to 1.0): </label>
+<input type="number" min="0", max="1" step="0.01" value="1.00"
+    id="listen_volume"
+    onchange="setting('listen_volume',2)" />
+
+<h2>Streaming / Transmitting:</h2>
+
+<label for="remote_icecast_url">Icecast URL: </label>
+<input type="text" id="remote_icecast_url"
+    onchange="setting('remote_icecast_url')" />
+
+<br />
+
+<label for="remote_icecast_port">Icecast Port: </label>
+<input type="number" min="0" max="65000" value="8000"
+    id="remote_icecast_port"
+    onchange="setting('remote_icecast_port',0)" />
+
+<br />
+
+<label for="remote_icecast_user">Icecast User: </label>
+<input type="text" id="remote_icecast_user"
+    onchange="setting('remote_icecast_user')" />
+
+<br />
+
+<label for="remote_icecast_password">Icecast Password: </label>
+<input type="password" id="remote_icecast_password"
+    onfocus="focusText('remote_icecast_password')"
+    onblur="blurPassword('remote_icecast_password')"
+    onchange="setting('remote_icecast_password')" />
+
+<br />
+
+<label for="remote_icecast_mountpoint">Icecast Mountpoint: </label>
+<input type="text" id="remote_icecast_mountpoint"
+    onchange="setting('remote_icecast_mountpoint')" />
+
+<h2>Encoder:</h2>
+
+<label for="mic_not_line">Microphone (not line input): </label>
+<input type="checkbox" id="mic_not_line" value="0"
+    onchange="setting('mic_not_line')">
+
+<br />
+
+<label for="channels">Channels: </label>
+<select id="channels" onchange="setting('channels')">
+    <option value="0">Joint stereo (common AGC)</option>
+    <option value="1">Dual stereo (split AGC)</option>
+    <option value="2">Left mono</option>
+    <option value="3">Right mono</opion>
+    <option value="4">Mixed mono</option>
+</select>
+
+</br>
+
+<label for="bitrate">Bitrate: </label>
+<select id="bitrate" onchange="setting('bitrate')">
+    <option value="32">32 kbps</option>
+    <option value="64">64 kbps</option>
+    <option value="96">96 kbps</option>
+    <option value="128">128 kbps</option>
+    <option value="192">192 kbps</option>
+</select>
+
+<br />
+
+<label for="sample_rate">Sample rate: </label>
+<select id="sample_rate" onchange="setting('sample_rate')">
+    <option value="32000">32000</option>
+    <option value="44100">44100</option>
+    <option value="48000">48000</option>
+</select>
+
+</br />
+
+<label for="manual_gain_level">Manual gain level (0.1 to 64.0): </label>
+<input type="number" min="0.1", max="64.0" step="0.1" value="1.0"
+    id="manual_gain_level"
+    onchange="setting('manual_gain_level',1)" />
+
+<br />
+
+<label for="agc_not_manual">Automatic Gain: </label>
+<input type="checkbox" id="agc_not_manual" value="0"
+    onchange="setting('agc_not_manual')">
+
+<br />
+
+<label for="agc_maximum_gain">Maximum AGC gain (1.0 to 64.0): </label>
+<input type="number" min="1.0", max="64.0" step="0.1" value="4.0"
+    id="agc_maximum_gain"
+    onchange="setting('agc_maximum_gain',1)" />
+
+<h2>Startup Mode:</h2>
+
+<label for="startup_auto_mode">Auto: </label>
+<select id="startup_auto_mode" onchange="setting('startup_auto_mode')">
+    <option value="listener">Listener</option>
+    <option value="transmitter">Transmitter</option>
+    <option value="waiting">Waiting</option>
+</select>
+
+<br />&nbsp;
+<br />&nbsp;
+
+<button type="button" id="reset_button"
+    onclick="sendToolkitCommand('$RESET')">Reset the Toolkit</button>
+
+<br />&nbsp;
+<br />&nbsp;
+<audio controls id="audio_stream" onclick="startAudio()">
+<!--    <source src="stream.mp3" type="audio/mpeg"> -->
+    [Audio Tag]
+</audio>
+<button type="button" id="audio_button"
+    onclick="startAudio()" style="width:80px">PLAY</button>
+
+
+<br />&nbsp;
+<h3>(November 2024)</h3>
+
+</div></body>
+<!-- END OF BODY -->
+
+<!-- Scripts that refer to objects in the html code -->
+<script src="toolkit.js"></script>
+
+<script>
+//    const loadTimeout = setTimeout(loadAfterDelay, 2000);
+    function loadAfterDelay() {
+        clearTimeout(loadTimeout);
+        // load style sheet
+        var link  = document.createElement('link');
+        link.id   = 'toolkitcss';
+        link.rel  = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'toolkit.css';
+        link.media = 'all';
+        document.head.appendChild(link);
+        // load javascript
+        var script = document.createElement('script');
+        script.id = "toolkitscript";
+        script.type="text/javascript"
+        script.src = "toolkit.js"
+        // OR script.setAttribute('src','toolkit.js');
+        document.body.appendChild(script);
+    }
+
+window.addEventListener("focus", function(event)
+{
+    // check to make sure the WS is running and has updated settings
+    if (!toolkitSocket.isConnected()) {
+        toolkitSocket.open();
+    }
+}, false);
+
+</script>
+
+</html>

@@ -1,0 +1,41 @@
+#
+# Toolkit settings.txt file
+#
+
+#WiFi router settings.
+    wifi_router_SSID            =   YourLocalSSID
+    wifi_router_password        =   YourLocalPassword
+
+#WiFi toolkit Access Point settings
+    wifi_toolkit_hostname       =   WaveFarmToolkit
+    wifi_toolkit_AP_SSID        =   WaveFarmToolkit_AP
+
+# Listening:
+    listen_icecast_url          =   audio.wavefarm.org
+    listen_icecast_port         =   8000
+    listen_icecast_mountpoint   =   /wgxc.mp3
+    listen_volume               =   0.88
+
+# Streaming:
+    remote_icecast_url          =   somewhereinspace.net
+    remote_icecast_port         =   8080
+    remote_icecast_user         =   source
+    remote_icecast_password     =   icypassword
+    remote_icecast_mountpoint   =   live
+
+# Encoder:
+    mic_not_line                =   0
+# channels: 0-jointstereo, 1-dualstereo, 2-leftmono, 3-rightmono, 4-mixedmono
+    channels                    =   1
+# bitrate: kpbs - 32, 64, 96, 128, 192
+    bitrate                     =   128
+# sample_rate: 32000, 44100, 48000
+    sample_rate                 =   44100
+    agc_not_manual              =   1
+    manual_gain_level           =   1.0
+    agc_maximum_gain            =   16.0
+
+# Auto: "listener" | "transmitter" | "waiting" (wait for instructions from afar)
+    startup_auto_mode   listener
+
+# END OF settings.txt
