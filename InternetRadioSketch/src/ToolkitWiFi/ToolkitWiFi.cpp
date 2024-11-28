@@ -63,6 +63,9 @@ uint16_t ToolkitWiFi::begin(uint16_t timeout_in_seconds)
     } else {
          Serial.println("\nWiFi connected to local router");
          Serial.println("IP address: ");  Serial.println(WiFi.localIP());
+         // WiFi.localIP().toString().c_str()
+         const char *ip = WiFi.localIP().toString().c_str();
+         SettingItem::updateOrAdd("wifi_router_ip", ip);
     }
 
     //
@@ -79,6 +82,8 @@ uint16_t ToolkitWiFi::begin(uint16_t timeout_in_seconds)
         delay(500); // wait until we have a valid IP
         Serial.printf("Soft AP SSID: %s, IP address: ", apssid);
         Serial.println(WiFi.softAPIP());
+        const char *ip = WiFi.softAPIP().toString().c_str();
+        SettingItem::updateOrAdd("wifi_toolkit_AP_IP", ip);
     }
 
     //

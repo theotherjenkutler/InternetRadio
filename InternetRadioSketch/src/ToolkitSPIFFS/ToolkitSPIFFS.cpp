@@ -10,7 +10,17 @@ char ToolkitSPIFFS::big_buffer[MAX_FILE_SIZE];
 
 boolean ToolkitSPIFFS::begin()
 {
-    return SPIFFS.begin(true); // formats the flash if it isn't formatted
+    if (!SPIFFS.begin(false)) {
+        Serial.println("SPIFFS will be reformatted!");
+        if (!SPIFFS.format()) {
+            Serial.println("Error formatting SPIFFS!");
+            return false;
+        } else { // formatted okay
+            delay(100);
+            return SPIFFS.begin(false);
+        }
+    }
+    return true; // formats the flash if it isn't formatted
 //    bool formatted = SPIFFS.format();
 } // returns false if the file system doesn't mount
 
