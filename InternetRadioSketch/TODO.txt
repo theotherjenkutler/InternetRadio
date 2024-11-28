@@ -9,6 +9,23 @@ window.addEventListener("focus", function(event)
     // check to make sure the WS is running and has updated settings
 }, false);
 
+We could add this into the static initializer of the toolkitSocket class.
+It should look like this ..
+
+    window.addEventListener("focus", function(event)
+    {
+        if (toolkitSocket.isConnected()) {
+            toolkitSocket.close();
+        }
+        setTimeout(function() {
+            toolkitSocket.open();
+        }, 500);
+    }, false);
+
+    try this and see if it works .. so that we refresh the settings
+    whenever we regain focus.
+
+
 ------------------------------------------------------------------------------
 (2)
 Add Kiosk mode
@@ -31,18 +48,11 @@ it will stay in config mode
 
 ------------------------------------------------------------------------------
 (3)
-FIX .. what do we do when we have no SPIFFS or settings on startup?
-Can we boot up in wait mode with some default settings and a hardcoded
-index.html page?
-
-How about an upload page. It can even upload over the WS connection?
-Our largest page should be under 16kB, which means we can send medium
-sized WS packets for uploads.
-
-Or we could support both SPIFFS and LittleFS
-include <LITTLEFS.h>
-LITTLEFS replaces all references to SPIFFS
-so we could make a FS pointer that can be set to the working filesystem.
+UPLOAD page works.
+We also need to support changing the Router SSID and Password via the default
+page.
+And the page should also post the local IP4 address if it knows it.
+And also the AP IP4 address so you can use it on your phone
 
 ------------------------------------------------------------------------------
 (DONE)

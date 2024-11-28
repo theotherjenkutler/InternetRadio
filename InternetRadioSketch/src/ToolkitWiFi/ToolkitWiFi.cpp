@@ -349,7 +349,7 @@ static char *findEndOfRequest(char *buffer, size_t size) {
 // ignore POST requests         -> reply with 200 OK ??
 // GET /toolkit.mp3 HTTP/1.1    -> reply with infinite header
 // WS request has a Sec-WebSocket-Key header -> reply with WS handshake
-#define MAX_PACKET_SIZE 1024*16   // incoming packets
+#define MAX_PACKET_SIZE 1024*12   // incoming packets
 static char http_buffer[MAX_PACKET_SIZE];
 
 enum {

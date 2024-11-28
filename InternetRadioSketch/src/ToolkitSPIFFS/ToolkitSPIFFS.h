@@ -45,7 +45,7 @@ class ToolkitSPIFFS
 
     private:
         enum {
-            MAX_FILE_SIZE = 4096*4
+            MAX_FILE_SIZE = 1024*10
         };
         static char big_buffer[MAX_FILE_SIZE];
 };
