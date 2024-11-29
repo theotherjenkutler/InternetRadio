@@ -42,19 +42,24 @@ void listen()
 {
   while (stream_thing.readyForData()) { // wait till mp3 wants more data
     //wants more data! check we have something available from the stream
-    if (stream_thing.listener.available() > 0) {
-    
-      size_t remaining = 0;
-      uint8_t *buffer = stream_thing.getNextInBuffer(&remaining);
-      if (remaining > 32) {
-        remaining = 32;
-      }
-    
-      uint8_t bytesused = stream_thing.listener.read(buffer, remaining);
-      stream_thing.playData(buffer, bytesused); // send to the VS1063a audio output
-      stream_thing.advanceInBuffer(bytesused);
-
-    } // end of listener.available()
+    if (stream_thing.reconnect_listener_if_needed()) {
+      if (stream_thing.listener.available() > 0) {
+      
+        size_t remaining = 0;
+        uint8_t *buffer = stream_thing.getNextInBuffer(&remaining);
+        if (remaining > 32) {
+          remaining = 32;
+        }
+      
+        uint8_t bytesused = stream_thing.listener.read(buffer, remaining);
+        stream_thing.playData(buffer, bytesused); // send to the VS1063a audio output
+        stream_thing.advanceInBuffer(bytesused);
+  
+      } // end of listener.available()
+    } else { // end of reconnect_listener_if_needed()
+      Serial.println("Listener has disconnected .. will try to reconnect in 10 seconds.");
+      vTaskDelay(portTICK_PERIOD_MS * 10000);
+    }
   } // end of while readyForData()  
 }
 

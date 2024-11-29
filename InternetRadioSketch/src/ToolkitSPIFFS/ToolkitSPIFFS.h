@@ -2,7 +2,7 @@
 // ToolkitSPIFFS.h
 
 #include <FS.h>
-#include <SPIFFS.h>
+//#include <SPIFFS.h>
 
 #ifndef ToolkitSPIFFS_H
 #define ToolkitSPIFFS_H
@@ -38,7 +38,10 @@ class ToolkitSPIFFS
         static boolean fileExists(const char *path);
         static char *fileRead(const char *path, size_t *size);
         static void fileReadToSerial(const char *path);
-        static boolean fileWrite(const char *path, const char *buffer, size_t size);
+        static boolean fileWrite(const char *path, const char *buffer,
+            size_t size, boolean append=false);
+
+        static File fileOpen(const char *path, const char *mode);
 
         static boolean loadSettings();
         static void saveSettings();

@@ -144,6 +144,16 @@ boolean Streamer::start_listener()
     return true;
 } // end of start_listener()
 
+boolean Streamer::reconnect_listener_if_needed()
+{
+    if (!listener.connected()) {
+        listener.stop();
+        vTaskDelay(portTICK_PERIOD_MS * 500);
+        return start_listener();
+    }
+    return true;
+}
+
 void Streamer::update_playbackVolume()
 {
     setPlaybackVolume(SettingItem::findFloat("listen_volume",0.9));

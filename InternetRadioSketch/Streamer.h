@@ -23,6 +23,7 @@ class Streamer : public ToolkitVS1063
         // clear (read) the stream headers. stream is
         // then ready to be passed to the mp3 decoder.
         boolean start_listener();
+        boolean reconnect_listener_if_needed();
 
         void update_playbackVolume();
         void update_recordVolume();

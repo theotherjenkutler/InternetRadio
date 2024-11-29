@@ -2,7 +2,7 @@
 // ToolkitSettings.cpp
 
 #include "ToolkitSettings.h"
-#include "parsingTools.h"
+#include "../parsingTools.h"
 
 //
 // The public stuff we want to use in our Sketch

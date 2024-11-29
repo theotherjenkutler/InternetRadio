@@ -96,5 +96,26 @@ inline const char *skipToTerminatar(const char *text)
     return text;
 }
 
+inline const char *findTwoEndlines(const char *buffer)
+{
+    uint32_t n = 0;
+    while (*buffer) {
+        switch (*buffer) {
+            case '\n' :
+                n++;
+            case '\r' :
+                break;
+            default :
+                n = 0;
+                break;
+        }
+        buffer++;
+        if (2==n) {
+            return buffer;
+        }
+    }
+    return NULL;
+}
+
 //
 // END OF parsingTools.h

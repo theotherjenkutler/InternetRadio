@@ -212,16 +212,26 @@ class toolkitSocket
             this.open();
             this.pending = message;
             setTimeout(function() {
-                this.socket.send(message);
-            }.bind(this),2000);
+                this.socket.send(this.pending);
+            }.bind(this), 500);
         }
     }
 
     static {
         setTimeout(function() {
             this.open();
-        }.bind(this), 2000);
-//        this.open();
+        }.bind(this), 500);
+
+        window.addEventListener("focus", function(event)
+        {
+            console.log("window focus handler");
+            if (toolkitSocket.isConnected()) {
+                toolkitSocket.close();
+            }
+            setTimeout(function() {
+                toolkitSocket.open();
+            }, 500);
+        }, false);
     }
 }
 //

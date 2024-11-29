@@ -1,5 +1,41 @@
+------------------------------------------------------------------------------
+(1)
+Add Kiosk mode
 
-(1) .. maybe we can fix the bug when reconnecting to the AP on a phone
+How about this:
+
+if the transmit icy url == "" then we don't connect to the icy server
+
+transmitter mode streams to icecast and does config page
+
+kiosk mode streams to icecase and does config for 2 mins, then kiosk
+
+- boots in the same way as transmitter mode
+- waits for 2 minutes and then switches from configuration mode to kiosk mode
+- while in configuration mode you can set the mode back to transmitter and then
+it will stay in config mode
+- while in transmitter mode you can switch to kiosk and it will switch in
+30 seconds
+
+------------------------------------------------------------------------------
+(DONE)
+Change large static http buffer to a inbetween stream buffer
+
+-> we want to use a short static buffer for GET requests and WS messages
+-> BUT we need to be able to stream in POST requests
+ The POST requests will have to block the server thread until the POST
+ is finished.
+
+------------------------------------------------------------------------------
+(DONE)
+UPLOAD page works.
+We also need to support changing the Router SSID and Password via the default
+page.
+And the page should also post the local IP4 address if it knows it.
+And also the AP IP4 address so you can use it on your phone
+
+------------------------------------------------------------------------------
+(DONE) .. maybe we can fix the bug when reconnecting to the AP on a phone
 
 If the AP login page is still sitting in the browser then it assumes
 that everything is already loaded and doesn't do a new load event.
@@ -24,35 +60,6 @@ It should look like this ..
 
     try this and see if it works .. so that we refresh the settings
     whenever we regain focus.
-
-
-------------------------------------------------------------------------------
-(2)
-Add Kiosk mode
-
-How about this:
-
-if the transmit icy url == "" then we don't connect to the icy server
-
-transmitter mode streams to icecast and does config page
-
-kiosk mode streams to icecase and does config for 2 mins, then kiosk
-
-- boots in the same way as transmitter mode
-- waits for 2 minutes and then switches from configuration mode to kiosk mode
-- while in configuration mode you can set the mode back to transmitter and then
-it will stay in config mode
-- while in transmitter mode you can switch to kiosk and it will switch in
-30 seconds
-
-
-------------------------------------------------------------------------------
-(3)
-UPLOAD page works.
-We also need to support changing the Router SSID and Password via the default
-page.
-And the page should also post the local IP4 address if it knows it.
-And also the AP IP4 address so you can use it on your phone
 
 ------------------------------------------------------------------------------
 (DONE)

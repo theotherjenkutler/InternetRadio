@@ -5,7 +5,7 @@
 #include "websocket.h"
 #include "postfile.h"
 #include "../ToolkitSPIFFS/ToolkitSPIFFS.h"
-
+#include "../parsingTools.h"
 
 ToolkitWiFi::ToolkitWiFi()
 {
@@ -322,39 +322,12 @@ void ToolkitWiFi::checkClientList()
 // PARSE HTTP HEADERS and figure out what type of request we have
 //
 
-static char *findEndOfRequest(char *buffer, size_t size) {
-    // we want to see \n\n or \r\n\r\n
-    uint32_t n = 0;
-    char *end = buffer + size;
-    while (size) {
-        switch (*buffer) {
-            case '\n' :
-                n++;
-                break;
-            case '\r' :
-                break;
-            default :
-                n = 0;
-                break;
-        }
-        buffer++;
-        size--;
-        if (2==n) {
-            if (buffer==end) {
-                return NULL;
-            }
-            return buffer;
-        }
-    }
-    return NULL;
-}
-
 // GET /favicon.ico HTTP/1.1    -> reply with 404
 // GET /generate_204 HTTP/1.1   -> reply with index.html
 // ignore POST requests         -> reply with 200 OK ??
 // GET /toolkit.mp3 HTTP/1.1    -> reply with infinite header
 // WS request has a Sec-WebSocket-Key header -> reply with WS handshake
-#define MAX_PACKET_SIZE 1024*12   // incoming packets
+#define MAX_PACKET_SIZE 1024   // incoming packets
 static char http_buffer[MAX_PACKET_SIZE];
 
 enum {
@@ -377,13 +350,17 @@ enum {
 
 static int whatisit(char *buffer, size_t size, char **path)
 {
-    char *req_end = findEndOfRequest(buffer, size);
-    if (NULL != req_end) {
-        uint32_t remaining = size - (req_end - buffer);
-        Serial.printf("Request buffer has %u bytes remaining\n", remaining);
-    }
-
     buffer[size] = 0;
+
+    // const char *req_end = findTwoEndlines(buffer);
+    // if (NULL != req_end) {
+    //     uint32_t remaining = size - (req_end - buffer);
+    //     Serial.printf("Request buffer has %u bytes remaining\n", remaining);
+    // }
+
+//    Serial.println("=====================");
+//    Serial.println(buffer);
+//    Serial.println("=====================");
 
     char *get = strtok(buffer, " ");
     if (NULL==get) {
@@ -536,6 +513,7 @@ static char *mime_type(const char *name)
 
 enum {
     FILE_IS_ANY     = 0,
+    FILE_IS_ROOT,
     FILE_IS_INDEX,
     FILE_IS_FAVICON,
     FILE_IS_UPLOAD
@@ -551,6 +529,8 @@ static uint32_t match_filename(const char *path)
         return FILE_IS_UPLOAD;
     } else if (0==strcmp("/index.html", path)) {
         return FILE_IS_INDEX;
+    } else if (0==strcmp("/", path)) {
+        return FILE_IS_ROOT;
     }
     return FILE_IS_ANY;
 }
@@ -568,6 +548,12 @@ void ToolkitWiFi::handleGetRequest(ToolkitWiFi_Client *twfc, const char *path)
     // index if it doesn't exist needs to set data and size directly
     // favicon should keep it's path
     // any, should change to index if it is not found
+
+    if (FILE_IS_ROOT==type) {
+        path = "/index.html";
+        type = FILE_IS_INDEX;
+    }
+    
     if (FILE_IS_ANY==type) {
         if (!ToolkitSPIFFS::fileExists(path)) {
             path = "/index.html";
@@ -604,46 +590,69 @@ void ToolkitWiFi::handleGetRequest(ToolkitWiFi_Client *twfc, const char *path)
 // HANDLE POST REQUEST
 //
 
+//
+// We want to parse the incoming buffer .. which will contain the headers
+// and the first part of the data.
+// Then we want to load in more chunks of data until we reach the
+// end boundary.
+
+// The header and start boundary should fit inside 1024 bytes
+// then we can push the rest through as a stream of N bytes at a time?
+
 void ToolkitWiFi::handlePostRequest(ToolkitWiFi_Client *twfc, const char *buffer,
     size_t size)
 {
     const char *content = NULL;
-    size_t content_size = 0;
+    size_t remaining = 0;
     const char *filename = NULL;
+
+    filename = postfile_findContent(buffer, &content, &remaining);
+
+    if ((NULL==filename) || (0==filename[1])) {
+        closeClient(twfc);
+        return;
+    }
+
+    File f = ToolkitSPIFFS::fileOpen(filename, FILE_WRITE);
+    if (!f) {
+        Serial.printf("Error creating file %s\n", filename);
+        return;
+    }
+
+    boolean keepgoing = true;
+
+    if (remaining) {
+        keepgoing = postfile_addContent(&f, content, remaining);
+    }
+
     int32_t tryagain = 4;
 
     // It works, but it's terrible code .. :)
 
-    while (NULL==(filename = postfile_extractContent(buffer, &content, &content_size))) {
+    while (keepgoing && (0!=tryagain)) {
         // delay and try to load more bytes
-        vTaskDelay(portTICK_PERIOD_MS * 2);
-        size_t avail = twfc->client->available();
-        size_t remaining = MAX_PACKET_SIZE - 1 - size;
-        if (avail > 0) {
-            if (avail > remaining) {
-                Serial.println("INCOMING POST DATA IS TOO BIG!");
-                return;
+        vTaskDelay(portTICK_PERIOD_MS * 20);
+        size_t avail;
+        while ((avail = twfc->client->available()) > 0) {
+            if (avail > MAX_PACKET_SIZE) {
+                avail = MAX_PACKET_SIZE;
             }
-            uint8_t *b = (uint8_t *) (http_buffer+size);
-            twfc->client->readBytes(b, avail);
-            size = size + avail;
-            http_buffer[size] = 0;
+            twfc->client->readBytes(http_buffer, avail);
+            // we still want to read any bytes after the file data
+            // so we keep readBytes(..) from the client, but
+            // only write to the file if keepgoing==true
+            if (keepgoing) {
+                keepgoing = postfile_addContent(&f, http_buffer, avail);
+            }
         }
+
         tryagain--;
         if (tryagain <= 0) {
             Serial.println("INCOMING POST DATA TIMEDOUT WAITING FOR PACKET!");
-            return;
         }
     }
 
-    if (filename) {
-        Serial.printf("POST file to SPIFFS: %s\n", filename);
-        if (content && content_size) {
-            if (!ToolkitSPIFFS::fileWrite(filename, content, content_size)) {
-                Serial.println("ERROR Writing file to SPIFFS!");
-            }
-        }
-    }
+    f.close();
 
 //    twfc->client->printf("HTTP/1.1 201 OK\n\n");
     const char okay[] = "200 File was uploaded!\n";
