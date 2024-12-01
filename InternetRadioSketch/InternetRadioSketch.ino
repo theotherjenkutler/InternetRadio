@@ -103,7 +103,7 @@ void icy_task(void *params)
       if (wifi_thing.startIcecastBroadcast()) {
         Serial.println("ICY Broadcast started!");
       } else {
-        Serial.println("ICY failed to start");
+        Serial.println("ICY failed to start!");
       }
     }
   }  
@@ -123,11 +123,11 @@ void start_rtos_tasks()
   }
 
   Serial.println("Toolkit started up with RTOS tasks");
-  Serial.printf("Tick timing is %u ticks per millisecond\n", portTICK_PERIOD_MS);
+  //Serial.printf("Tick timing is %u ticks per millisecond\n", portTICK_PERIOD_MS);
 
 #if USE_RTOS_TASKS & USE_RTOS_DREQ_DELAY
   Serial.println("RTOS + RTOS DREQ DELAY are ON");
-  Serial.printf("Maximum Priority = %u\n", configMAX_PRIORITIES); // prints out 25
+  //Serial.printf("Maximum Priority = %u\n", configMAX_PRIORITIES); // prints out 25
 #endif
 
 }
@@ -192,11 +192,11 @@ void setup() {
   Serial.println("\n\nWave Farm Toolkit!");
 
   //--------------------------------------------------
-  // Load settings from SPIFFS (internal flash drive)
+  // Load settings from internal flash drive)
   //
 
   if (!ToolkitFiles::begin()) {
-    Serial.println("ERROR starting SPIFFS!");
+    Serial.println("ERROR starting FileSystem!");
     force_waiting_mode = true; // don't run the audio stream until we have settings
   } else { // load settings
     Serial.println("--------------------------");
@@ -235,16 +235,16 @@ void setup() {
     if (stream_thing.listen_dont_encode) {
       stream_thing.start_listener();
     } else { // startup as encoder
-      Serial.println("Starting in transmitter mode");
+      Serial.println("Starting in transmitter mode.");
       if (wifi_thing.startIcecastBroadcast()) {
         Serial.println("ICY Broadcast started!");
       } else {
-        Serial.println("ICY failed to start");
+        Serial.println("ICY failed to start!");
       }
       stream_thing.encoder_start();
     }
   } else {
-    Serial.println("Starting in Waiting mode");
+    Serial.println("Starting in Waiting mode.");
   }
 
   //--------------------------------------------------

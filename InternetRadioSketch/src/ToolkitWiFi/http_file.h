@@ -7,10 +7,11 @@
 #include "ToolkitWiFi_Client.h"
 
 void http_handlePostRequest(ToolkitWiFi_Client *twfc,
-    char *buffer, size_t max_size);
+    char *buffer, size_t actual, size_t max_size);
 
 void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
-    const char *default_index, size_t default_index_size);
+    const char *default_index, size_t default_index_size,
+    char *buffer, size_t max_size);
 
 #endif
 

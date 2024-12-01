@@ -9,17 +9,13 @@
 
 #include "ToolkitFiles.h"
 
-const char *SETTINGS_PATHNAME = "/settings.txt";
-
-char ToolkitFiles::big_buffer[MAX_FILE_SIZE];
-
 boolean ToolkitFiles::begin()
 {
     if (!TOOLFS.begin(false)) {
-        Serial.println("SPIFFS will be reformatted!");
+        Serial.println("Flash Storage will be reformatted!");
         Serial.println("This may take a while ..");
         if (!TOOLFS.format()) {
-            Serial.println("Error formatting SPIFFS!");
+            Serial.println("Error formatting Flash Storage!");
             return false;
         } else { // formatted okay
             delay(100);
@@ -51,33 +47,34 @@ boolean ToolkitFiles::fileExists(const char *path)
     return TOOLFS.exists(path);
 }
 
-char* ToolkitFiles::fileRead(const char *path, size_t *size)
+char* ToolkitFiles::fileReadAll(const char *path, char *buffer,
+    size_t size, size_t *actual)
 {
-    *size = 0;
+    *actual = 0;
     File f = TOOLFS.open(path);
     if(!f || f.isDirectory()){
         return NULL;
     }
     size_t length = f.size();
-    if (length > (MAX_FILE_SIZE-1)) {
+    if (length > (size-1)) {
         Serial.print("Filesize is too big .. ");
         Serial.println(path);
         f.close();
         return NULL;
     }
 
-    char *p = big_buffer;
+    char *p = buffer;
     size_t remaining = length;
-    size_t actual;
+    size_t a;
     while (remaining) {
-        actual = f.readBytes(p, remaining);
-        p = p + actual;
-        remaining = remaining - actual;
+        a = f.readBytes(p, remaining);
+        p = p + a;
+        remaining = remaining - a;
     }
     f.close();
-    big_buffer[length] = 0;
-    *size = length;
-    return big_buffer;
+    buffer[length] = 0;
+    *actual = length;
+    return buffer;
 }
 
 void ToolkitFiles::fileReadToSerial(const char *path)
@@ -125,10 +122,15 @@ File ToolkitFiles::fileOpen(const char *path, const char *mode)
     return TOOLFS.open(path, mode);
 }
 
+//
+// Settings
+const char *SETTINGS_PATHNAME = "/settings.txt";
+static char settings_buffer[ToolkitFiles::MAX_SETTINGS_SIZE];
+
 boolean ToolkitFiles::loadSettings()
 {
     size_t length;
-    char *buffer = fileRead(SETTINGS_PATHNAME, &length);
+    char *buffer = fileReadAll(SETTINGS_PATHNAME, settings_buffer, MAX_SETTINGS_SIZE, &length);
     if (buffer && length) {
         SettingItem::loadSettingsFromBuffer(buffer, length);
         return true;
@@ -138,9 +140,9 @@ boolean ToolkitFiles::loadSettings()
 
 void ToolkitFiles::saveSettings()
 {
-    size_t actual = SettingItem::saveAll(big_buffer, MAX_FILE_SIZE);
+    size_t actual = SettingItem::saveAll(settings_buffer, MAX_SETTINGS_SIZE);
     if (actual) {
-        fileWrite(SETTINGS_PATHNAME, big_buffer, actual);
+        fileWrite(SETTINGS_PATHNAME, settings_buffer, actual);
     }
 }
 

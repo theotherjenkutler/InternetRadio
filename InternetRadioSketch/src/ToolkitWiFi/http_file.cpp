@@ -11,16 +11,51 @@
 // HTTP RESPONSE .. send header and content
 //
 
-static void http_send(ToolkitWiFi_Client *twfc, const char *data, size_t size, bool okay, const char *type) {
+enum {
+    RESPONSE_OKAY       = 200,
+    RESPONSE_CREATED    = 201,
+    RESPONSE_NOT_FOUND  = 404
+};
+
+static void http_send_header(ToolkitWiFi_Client *twfc,
+    size_t content_length, uint32_t response, const char *mime)
+{
     const char nocache[] =
         "Cache-Control: no-cache, no-store, must-revalidate\n"
         "Pragma: no-cache\nExpires: 0\n";
-    int response = 200;
-    if (!okay) response = 404;
 	twfc->client->printf(
-        "HTTP/1.1 %d OK\nContent-Length: %u\nContent-Type: %s; charset=UTF-8\n%s\n",
+        "HTTP/1.1 %u OK\nContent-Length: %u\nContent-Type: %s; charset=UTF-8\n%s\n",
+        response, content_length, mime, nocache);
+}
+
+static void http_send_data_chunk(ToolkitWiFi_Client *twfc,
+    const char *data, size_t size)
+{
+    twfc->client->write(data,size);
+}
+
+static void http_send(ToolkitWiFi_Client *twfc, const char *data, size_t size,
+    uint32_t response, const char *type)
+{
+    const char nocache[] =
+        "Cache-Control: no-cache, no-store, must-revalidate\n"
+        "Pragma: no-cache\nExpires: 0\n";
+	twfc->client->printf(
+        "HTTP/1.1 %u OK\nContent-Length: %u\nContent-Type: %s; charset=UTF-8\n%s\n",
         response, size, type, nocache);
 	twfc->client->write(data,size);
+}
+
+static void http_send_201(ToolkitWiFi_Client *twfc)
+{
+    const char okay[] = "201 File was uploaded!\n";
+    http_send(twfc, okay, strlen(okay), RESPONSE_CREATED, "text/html");
+}
+
+static void http_send_404(ToolkitWiFi_Client *twfc)
+{
+    const char unknown[] = "404 Can't find the file!\n";
+    http_send(twfc, unknown, strlen(unknown), RESPONSE_NOT_FOUND, "text/html");
 }
 
 //------------------------------------------------------------------
@@ -68,11 +103,10 @@ static char match[MAX_BOUNDARY_LENGTH+2] = "";
 static uint32_t matchpoint = 0;
 
 static const char *postfile_findContent(const char *buffer,
-    const char **content, size_t *remaining)
+    const char **content)
 {
 
     *content = NULL;
-    *remaining = 0;
     filename[0] = '/';
     filename[1] = 0;
     boundary[0] = 0;
@@ -149,10 +183,6 @@ static const char *postfile_findContent(const char *buffer,
 
     // (6) NOW we have the start of the content
     *content = buffer;
-    end = buffer;
-    while (*end) { end++; }
-    *remaining = end - *content;
-
     return (const char *) filename;
 }
 
@@ -255,13 +285,13 @@ BOUNDARY
 */
 
 void http_handlePostRequest(ToolkitWiFi_Client *twfc,
-    char *buffer, size_t max_size)
+    char *buffer, size_t actual, size_t max_size)
 {
     const char *content = NULL;
     size_t remaining = 0;
     const char *filename = NULL;
 
-    filename = postfile_findContent(buffer, &content, &remaining);
+    filename = postfile_findContent(buffer, &content);
 
     if ((NULL==filename) || (0==filename[1])) {
         twfc->closeClient();
@@ -276,6 +306,7 @@ void http_handlePostRequest(ToolkitWiFi_Client *twfc,
     }
 
     boolean keepgoing = true;
+    remaining = actual - (content - buffer);
 
     if (remaining) {
         keepgoing = postfile_addContent(&f, content, remaining);
@@ -298,6 +329,7 @@ void http_handlePostRequest(ToolkitWiFi_Client *twfc,
             // only write to the file if keepgoing==true
             if (keepgoing) {
                 keepgoing = postfile_addContent(&f, buffer, avail);
+                vTaskDelay(portTICK_PERIOD_MS * 1);
             }
         }
 
@@ -309,10 +341,7 @@ void http_handlePostRequest(ToolkitWiFi_Client *twfc,
 
     f.close();
 
-//    twfc->client->printf("HTTP/1.1 201 OK\n\n");
-    const char okay[] = "200 File was uploaded!\n";
-    http_send(twfc, okay, strlen(okay), true, "text/html");
-
+    http_send_201(twfc);
     twfc->setClientTimedClose();
 }
 
@@ -385,7 +414,8 @@ static uint32_t match_filename(const char *path)
 }
 
 void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
-    const char *default_index, size_t default_index_size)
+    const char *default_index, size_t default_index_size,
+    char *buffer, size_t max_size)
 {
     // fetch the file from *path, set the mime-type and content headers
         // the spiffs read will pull the file into an internal 4kB buffer
@@ -417,21 +447,40 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
         }
     }
 
+    // I think at this point it is one of
+    //  FILE_IS_ANY .. exists on the flash drive
+    //  FILE_IS_INDEX .. exists on the flash drive
+    //  FILE_IS_FAVICON .. may or may not exist on the flash drive
+    //  FILE_IS_UPLOAD .. use the _default if it exists
     if (FILE_IS_UPLOAD==type) {
-        data = (char *) default_index;
-        size = default_index_size;
-        path = "/upload.html";  // so we get the correct mime type
+        if (default_index && default_index_size) {
+            http_send(twfc, default_index, default_index_size,
+                RESPONSE_OKAY, "text/html");
+        } else {
+            http_send_404(twfc);
+        }
     } else {
-        data = ToolkitFiles::fileRead(path, &size);
+        File f = ToolkitFiles::fileOpen(path, FILE_READ);
+        if (f) {
+            uint32_t content_length = f.size();
+            const char *mime = mime_type(path);
+            http_send_header(twfc, content_length, RESPONSE_OKAY, mime);
+            // now read the file in chunks until it all sent
+            int avail;
+            size_t actual;
+            while ((avail=f.available()) > 0) {
+                if (avail > max_size) {
+                    avail = max_size;
+                }
+                actual = f.readBytes(buffer, avail);
+                http_send_data_chunk(twfc, buffer, actual);
+            }
+            f.close();
+        } else {
+            http_send_404(twfc);
+        }
     }
 
-    if (data && size) {
-        const char *mime = mime_type(path);
-        http_send(twfc, data, size, true, mime);
-    } else {
-        const char unknown[] = "404 Can't find the file!\n";
-        http_send(twfc, unknown, strlen(unknown), false, "text/html");
-    }
     twfc->setClientTimedClose();
 }
 

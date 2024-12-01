@@ -54,52 +54,52 @@ ToolkitWiFi_Server::~ToolkitWiFi_Server()
 uint16_t ToolkitWiFi_Server::begin(uint16_t timeout_in_seconds)
 {
     uint16_t result = WIFI_ALL_OKAY;
+    WiFi.mode(WIFI_STA); // all examples use this mode, even for AP only
+    delay(200);
 
     //
     // (1) Autoconnect to a local router in station mode
-    Serial.print("Connecting to SSID ");
-    Serial.println(SettingItem::findString("wifi_router_SSID"));
+    const char *router_SSID = SettingItem::findString("wifi_router_SSID");
+    if (router_SSID && router_SSID[0]) {
+        Serial.printf("Connecting to SSID %s\n",router_SSID);
+        // hostname is the name that should appear in your routers IP list
+        WiFi.hostname(SettingItem::findString("wifi_toolkit_hostname"));
+        WiFi.begin(router_SSID, SettingItem::findString("wifi_router_password"));
 
-    WiFi.mode(WIFI_STA);
-    delay(200);
-    WiFi.hostname(SettingItem::findString("wifi_toolkit_hostname"));
-    WiFi.begin(SettingItem::findString("wifi_router_SSID"),
-        SettingItem::findString("wifi_router_password"));
+        uint16_t timeout = timeout_in_seconds * 2;
+        while (timeout && (WiFi.status() != WL_CONNECTED)) {
+            delay(500);
+            Serial.print(".");
+            timeout--;
+        }
 
-    uint16_t timeout = timeout_in_seconds * 2;
-    while (timeout && (WiFi.status() != WL_CONNECTED)) {
-        delay(500);
-        Serial.print(".");
-        timeout--;
-    }
-
-    if (WiFi.status() != WL_CONNECTED) {
-        result = result | WIFI_TIMEOUT_ON_STATION;
-        Serial.println("\nWiFi failed to connect to local router!");
-    } else {
-         Serial.println("\nWiFi connected to local router");
-         Serial.println("IP address: ");  Serial.println(WiFi.localIP());
-         // WiFi.localIP().toString().c_str()
-         const char *ip = WiFi.localIP().toString().c_str();
-         SettingItem::updateOrAdd("wifi_router_ip", ip);
-    }
+        if (WiFi.status() != WL_CONNECTED) {
+            result = result | WIFI_TIMEOUT_ON_STATION;
+            Serial.println("\nWiFi failed to connect to local router!");
+        } else {
+             const char *ip = WiFi.localIP().toString().c_str();
+             SettingItem::updateOrAdd("wifi_router_ip", ip);
+             Serial.println("\nWiFi connected to local router.");
+             Serial.printf("IP address: %s\n", ip);
+        }
+    } // end of if(we have a router SSID)
 
     //
     // (2) Create a soft access point
     const char *default_apssid = "WaveFarmToolkit";
     const char *apssid = SettingItem::findString("wifi_toolkit_AP_SSID");
-    if (NULL == apssid) { apssid = default_apssid; }
-
+    if ((NULL==apssid) || (0==apssid[0])) {
+        apssid = default_apssid;
+    }
     // ssid,pswd,channel,hidden,maxconnections
     if (!WiFi.softAP(apssid,"",AP_CHANNEL,false,MAX_CONNECTIONS)) {
         result = result | WIFI_FAIL_ON_ACCESS_POINT;
         Serial.println("WiFi failed to start soft Access Point!");
     } else {
         delay(500); // wait until we have a valid IP
-        Serial.printf("Soft AP SSID: %s, IP address: ", apssid);
-        Serial.println(WiFi.softAPIP());
         const char *ip = WiFi.softAPIP().toString().c_str();
         SettingItem::updateOrAdd("wifi_toolkit_AP_IP", ip);
+        Serial.printf("Soft AP SSID: %s, IP address: %s\n", apssid, ip);
     }
 
     //
@@ -270,7 +270,8 @@ static void http_send_infinite(ToolkitWiFi_Client *twfc, bool okay, const char *
 static void handleGetRequest(ToolkitWiFi_Client *twfc, const char *path)
 {
     http_handleGetRequest(twfc, path,
-        _default_index, _default_index_size);
+        _default_index, _default_index_size,
+        http_buffer, MAX_PACKET_SIZE);
 }
 
 //------------------------------------------------------------------
@@ -289,7 +290,7 @@ static void handleGetRequest(ToolkitWiFi_Client *twfc, const char *path)
 static void handlePostRequest(ToolkitWiFi_Client *twfc,
     const char *buffer, size_t size)
 {
-    http_handlePostRequest(twfc,http_buffer, MAX_PACKET_SIZE);
+    http_handlePostRequest(twfc, http_buffer, size, MAX_PACKET_SIZE);
 }
 
 //------------------------------------------------------------------
@@ -452,6 +453,8 @@ static void handleUnknownRequest(ToolkitWiFi_Client *twfc)
     if (avail > (MAX_PACKET_SIZE-1)) {
         avail = MAX_PACKET_SIZE - 1;
         //Serial.println("INCOMING PACKET IS TOO BIG!");
+        //Packets are streamed for POST requests
+        //All other packets should fit in 1024 bytes
     }
 
     twfc->millis_last_used = 0; // reset the timer when a new request comes in

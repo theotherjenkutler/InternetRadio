@@ -33,21 +33,24 @@ class ToolkitFiles
         static boolean begin();
 
         static boolean fileExists(const char *path);
-        static char *fileRead(const char *path, size_t *size);
+
+        static char *fileReadAll(const char *path, char *buffer,
+            size_t size, size_t *actual);
         static void fileReadToSerial(const char *path);
         static boolean fileWrite(const char *path, const char *buffer,
             size_t size, boolean append=false);
 
         static File fileOpen(const char *path, const char *mode);
 
+        // These functions read the entire file into big_buffer[]
+        // Larger files need to be streamed in chunks.
         static boolean loadSettings();
         static void saveSettings();
 
-    private:
+        // loading and saving settings uses a static buffer
         enum {
-            MAX_FILE_SIZE = 1024*10
+            MAX_SETTINGS_SIZE = 1024*2
         };
-        static char big_buffer[MAX_FILE_SIZE];
 };
 
 #endif

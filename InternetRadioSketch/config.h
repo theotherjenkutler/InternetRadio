@@ -15,8 +15,8 @@
 #define USE_RTOS_DREQ_DELAY 1
 
 // Delay times are in milliseconds
-#define RTOS_DELAY_SERVER_TASK      10
-#define RTOS_DELAY_LISTENER_TASK    20
+#define RTOS_DELAY_SERVER_TASK      5
+#define RTOS_DELAY_LISTENER_TASK    10
 #define RTOS_DELAY_ENCODER_TASK     30  // smaller=fewer chirps
 
 // Set to 1 to run the VLSI streaming tasks at higher 

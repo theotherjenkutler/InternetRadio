@@ -28,7 +28,7 @@ class SettingItem
         static void destroyAll();
 
         // (4) fetch your settings by key name
-        static char *findString(const char *name);
+        static char *findString(const char *name); // returns NULL if not found
         static uint16_t findUInt(const char *name, uint16_t default_value);
         static float findFloat(const char *name, float default_value);
             // UInt will convert the string to an int

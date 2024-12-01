@@ -1,0 +1,41 @@
+
+(1) OPUS
+
+At 44100 it takes about 22% of the 10MHz spi clock to load in a stereo stream.
+That leaves approx. 78% for encoding and posting to the broadcasting thread.
+
+48000 would be approx. 24% 76%
+
+The esp32 Opus library can read in audio, encode, decode, and output audio
+without running out of CPU. The audio in-out is DMA based.
+
+Opus has distinct frames, but the length of each frame must be carried by a
+transport stream (RTP, WebWTC Audio, OGG, etc.).
+
+For RTP we would have 1 way streaming to the RTP receiver
+
+For WebRTC Audio we could STUN (which is a good way to connect) and then
+send. Can we NOT receive? Even if we ignore incoming packets, the WiFi
+under belly will have to read them in and then discard them.
+
+In theory, if you set the constraint offerToReceiveVideo=false and
+offerToReceiveAudio=false, you should get a sendonly peerconnection.
+
+WebRTC:
+
+RTP - to transmit the audio + video packets
+RTCP - control info for the RTP stream
+SCTP - control back and forth (two way) over UDP
+SDP - negotiate the connection
+
+STUN - higher level negotiate
+ICE - find ways to communicate
+Peer Signaling
+Peer Connection
+
+DNS to resolve addresses and routes and ports
+TLS
+JSON - for signaling
+
+WHIP - WebRTC-HTTP ingestion protocol (setup/negotiation)
+MQTT - publish subscribe messaging protocol ..
