@@ -1,11 +1,11 @@
 //
-// websocket.c - for locus
+// websocket.cpp - for locus 2024
 //
 
 #include "websocket.h"
 #include "sha1.h"
 
-#include "../ToolkitSPIFFS/ToolkitSPIFFS.h"
+#include "../ToolkitFiles/ToolkitFiles.h"
 
 //------------------------------------------------------------------------
 //
@@ -137,7 +137,7 @@ char *websocket_handshake(const char *wsKey, uint32_t *reply_length)
 
 //------------------------------------------------------------------------
 //
-// RECEIVE messages, SEND messages
+// RECEIVE messages
 //
 
 static void mask(uint8_t *data, uint8_t *masks, uint32_t size)
@@ -150,7 +150,8 @@ static void mask(uint8_t *data, uint8_t *masks, uint32_t size)
 }
 
 // returns total length of frame (headers + data) or 0 for error
-uint32_t websocket_parse_frame(websocket_frame_info *wfi, const char *buffer, uint32_t buffer_length)
+static uint32_t websocket_parse_frame(websocket_frame_info *wfi,
+    const char *buffer, uint32_t buffer_length)
 {
     uint8_t *b = (uint8_t *) buffer;
 // printf("websocket incoming buffer length = %d\n", buffer_length);
@@ -194,6 +195,11 @@ uint32_t websocket_parse_frame(websocket_frame_info *wfi, const char *buffer, ui
     return headerSize + 4 + wfi->dataSize;
 }
 
+//------------------------------------------------------------------------
+//
+// SEND messages
+//
+
 // We actually want to send all the settings at once
 // and then maybe some control messages once in a while
 // So we need to be able to handle payloads up to 1200 bytes
@@ -202,7 +208,7 @@ uint32_t websocket_parse_frame(websocket_frame_info *wfi, const char *buffer, ui
 
 static char packet[PACKET_MAX_LENGTH];
 
-void websocket_sendString(ToolkitWiFi_Client *twfc, const char *str)
+static void websocket_sendString(ToolkitWiFi_Client *twfc, const char *str)
 {
     size_t payload_len = strlen(str);
     if (payload_len > (PACKET_MAX_LENGTH-4)) {
@@ -237,7 +243,34 @@ void websocket_sendSettings(ToolkitWiFi_Client *twfc)
     twfc->client->write(packet, 4 + payload_len);
 }
 
-boolean websocket_handleIncoming(const char *buffer, size_t size)
+//------------------------------------------------------------------------
+//
+// HANDLE incoming packets
+//
+
+static void websocket_echoToOthers(ToolkitWiFi_Client *twfc,
+    const char *name, const char *value)
+{
+    for (uint16_t i = 0; i < ToolkitWiFi_Client::MAX_CLIENTS; i++) {
+        ToolkitWiFi_Client *t = &ToolkitWiFi_Client::_client_list[i];
+        if (t != twfc) {
+            if (NULL != t->client) {
+                if (!t->client->connected()) {
+                    t->closeClient();
+                    //    Serial.println("Client closed itself");
+                } else if (ToolkitWiFi_Client::TYPE_WEBSOCKET==t->type) {
+                    static char s[64];
+                    sprintf(s,"%s %s\n", name, value);
+                    websocket_sendString(t, s);
+                }
+            }
+        }
+    } // end of for()
+}
+
+boolean websocket_handleIncoming(
+    ToolkitWiFi_Client *twfc,
+    const char *buffer, size_t size)
 {
     static websocket_frame_info wfi;
     int remaining = size;
@@ -269,7 +302,9 @@ boolean websocket_handleIncoming(const char *buffer, size_t size)
                             }
                         } else { // setting
                             SettingItem::updateOrAdd(name, value);
-                            ToolkitSPIFFS::saveSettings();
+                            ToolkitFiles::saveSettings();
+                            websocket_echoToOthers(twfc, name, value);
+                            ToolkitWiFi_Server::handleWSLiveChanges(name, value);
                         }
                     }
                 }
@@ -283,4 +318,4 @@ boolean websocket_handleIncoming(const char *buffer, size_t size)
 }
 
 //
-// END OF websocket.c
+// END OF websocket.cpp

@@ -1,25 +1,19 @@
 //
-// ToolkitSPIFFS.cpp
+// ToolkitFiles.cpp
 
 #include <FS.h>
-#include <SPIFFS.h>
-
-//#include <esp_littlefs.h>
-//#include <lfs.h>
-//#include <lfs_util.h>
+//#include <SPIFFS.h>
 #include <LITTLEFS.h>
-//#include <littlefs_api.h>
 
 #define TOOLFS LITTLEFS
 
-#include "ToolkitSPIFFS.h"
-//#include "ToolkitSettings.h"
+#include "ToolkitFiles.h"
 
 const char *SETTINGS_PATHNAME = "/settings.txt";
 
-char ToolkitSPIFFS::big_buffer[MAX_FILE_SIZE];
+char ToolkitFiles::big_buffer[MAX_FILE_SIZE];
 
-boolean ToolkitSPIFFS::begin()
+boolean ToolkitFiles::begin()
 {
     if (!TOOLFS.begin(false)) {
         Serial.println("SPIFFS will be reformatted!");
@@ -52,12 +46,12 @@ boolean ToolkitSPIFFS::begin()
 // NOTE: the headers available online differ from the headers used by the IDE
 // bool create is not part of the open() prototype!
 
-boolean ToolkitSPIFFS::fileExists(const char *path)
+boolean ToolkitFiles::fileExists(const char *path)
 {
     return TOOLFS.exists(path);
 }
 
-char* ToolkitSPIFFS::fileRead(const char *path, size_t *size)
+char* ToolkitFiles::fileRead(const char *path, size_t *size)
 {
     *size = 0;
     File f = TOOLFS.open(path);
@@ -86,7 +80,7 @@ char* ToolkitSPIFFS::fileRead(const char *path, size_t *size)
     return big_buffer;
 }
 
-void ToolkitSPIFFS::fileReadToSerial(const char *path)
+void ToolkitFiles::fileReadToSerial(const char *path)
 {
     Serial.printf("Reading file: %s\r\n", path);
 
@@ -102,7 +96,7 @@ void ToolkitSPIFFS::fileReadToSerial(const char *path)
     }
 }
 
-boolean ToolkitSPIFFS::fileWrite(const char *path, const char *buffer,
+boolean ToolkitFiles::fileWrite(const char *path, const char *buffer,
     size_t size, boolean append)
 {
     File f;
@@ -126,12 +120,12 @@ boolean ToolkitSPIFFS::fileWrite(const char *path, const char *buffer,
     return true;
 }
 
-File ToolkitSPIFFS::fileOpen(const char *path, const char *mode)
+File ToolkitFiles::fileOpen(const char *path, const char *mode)
 {
     return TOOLFS.open(path, mode);
 }
 
-boolean ToolkitSPIFFS::loadSettings()
+boolean ToolkitFiles::loadSettings()
 {
     size_t length;
     char *buffer = fileRead(SETTINGS_PATHNAME, &length);
@@ -142,7 +136,7 @@ boolean ToolkitSPIFFS::loadSettings()
     return false;
 }
 
-void ToolkitSPIFFS::saveSettings()
+void ToolkitFiles::saveSettings()
 {
     size_t actual = SettingItem::saveAll(big_buffer, MAX_FILE_SIZE);
     if (actual) {
@@ -208,4 +202,4 @@ void readFile(fs::FS &fs, const char * path){
 //-----------
 
 //
-// END OF ToolkitSPIFFS.cpp
+// END OF ToolkitFiles.cpp

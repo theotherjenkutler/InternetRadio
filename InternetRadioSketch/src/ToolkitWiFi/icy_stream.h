@@ -1,16 +1,19 @@
 //----------------------------------------------------------------------------------------------
 //
-//	icy_request_header.h
+//	icy.h
 //
 //	February 2019
 //
 //----------------------------------------------------------------------------------------------
 
-// Buffer should be 512 bytes long
+#ifndef _ICY_H_
+#define _ICY_H_
 
-void icy_make_request(char *buffer, const char *ip, uint32_t port,
-	char *username, char *password, char *mountpoint);
+// Create a request header from setting, open connection, etc.
+boolean icy_start_stream(WiFiClient *client);
+
+#endif
 
 //----------------------------------------------------------------------------------------------
-// END OF icy_request_header.h
+// END OF icy.h
 //----------------------------------------------------------------------------------------------

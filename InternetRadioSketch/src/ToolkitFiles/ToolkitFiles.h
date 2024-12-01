@@ -1,11 +1,11 @@
 //
-// ToolkitSPIFFS.h
+// ToolkitFiles.h
 
 #include <FS.h>
 //#include <SPIFFS.h>
 
-#ifndef ToolkitSPIFFS_H
-#define ToolkitSPIFFS_H
+#ifndef ToolkitFiles_H
+#define ToolkitFiles_H
 
 #include "ToolkitSettings.h"
 
@@ -27,12 +27,9 @@
 // AT this point we have 280kB of RAM to play with, so we can
 // pre-allocate 2 or 3 8kB chunks for file and header stuff.
 
-class ToolkitSPIFFS
+class ToolkitFiles
 {
     public:
-//        ToolkitSPIFFS() {;}
-//        ~ToolkitSPIFFS() {;}
-
         static boolean begin();
 
         static boolean fileExists(const char *path);
@@ -56,4 +53,4 @@ class ToolkitSPIFFS
 #endif
 
 //
-// END OF ToolkitSPIFFS.h
+// END OF ToolkitFiles.h

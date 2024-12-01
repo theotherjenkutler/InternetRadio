@@ -5,7 +5,7 @@
 #include "Streamer.h"
 
 #include "src/ToolkitVLSI/ToolkitVLSI.h"
-#include "src/ToolkitSPIFFS/ToolkitSPIFFS.h"
+#include "src/ToolkitFiles/ToolkitFiles.h"
 
 // Hardware pins
 // We are using the default SPI I/O pins, so we don't have to define them

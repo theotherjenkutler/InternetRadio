@@ -2,7 +2,7 @@
 // websocket.h
 //
 
-#include "ToolkitWiFi.h"
+#include "ToolkitWiFi_Server.h"
 
 #ifndef _LOCUS_WEBSOCKET_H_
 #define _LOCUS_WEBSOCKET_H_
@@ -22,20 +22,14 @@ const char *websocket_getClientKey();
 char *websocket_handshake(const char *wsKey, uint32_t *reply_length);
 
 //
-// WS parse an incoming frame
-uint32_t websocket_parse_frame(websocket_frame_info *wfi,
-    const char *buffer, uint32_t buffer_length);
-
-//
 // Toolkit - send to the browser
-void websocket_sendString(ToolkitWiFi_Client *twfc, const char *str);
+//void websocket_sendString(ToolkitWiFi_Client *twfc, const char *str);
 void websocket_sendSettings(ToolkitWiFi_Client *twfc);
 
 //
-// Toolkit - receive from the browser
-// DO NOT EXPOSE!!
-// boolean websocket_handleIncoming(const char *buffer, size_t size);
-    // close the connection if this returns false
+// Handle incoming packets
+boolean websocket_handleIncoming(ToolkitWiFi_Client *twfc,
+    const char *buffer, size_t size);
 
 #endif
 

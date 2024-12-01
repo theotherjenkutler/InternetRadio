@@ -17,12 +17,12 @@
 // Include for local/project libraires
 // VLSI VS10xx
 #include "Streamer.h"
-#include "src/ToolkitSPIFFS/ToolkitSPIFFS.h"
-#include "src/ToolkitWiFi/ToolkitWiFi.h"
+#include "src/ToolkitFiles/ToolkitFiles.h"
+#include "src/ToolkitWiFi/ToolkitWiFi_Server.h"
 
 // These objects connect us with the Toolkit VLSI and WiFi Server
 Streamer stream_thing;
-ToolkitWiFi wifi_thing;
+ToolkitWiFi_Server wifi_thing;
 
 //------------------------------------------------------------------------------------
 //
@@ -195,12 +195,12 @@ void setup() {
   // Load settings from SPIFFS (internal flash drive)
   //
 
-  if (!ToolkitSPIFFS::begin()) {
+  if (!ToolkitFiles::begin()) {
     Serial.println("ERROR starting SPIFFS!");
     force_waiting_mode = true; // don't run the audio stream until we have settings
   } else { // load settings
     Serial.println("--------------------------");
-    if (!ToolkitSPIFFS::loadSettings()) {
+    if (!ToolkitFiles::loadSettings()) {
       Serial.println("No settings to load!");
       force_waiting_mode = true; // don't run the audio stream until we have settings
       SettingItem::loadSettingsFromBuffer(default_settings, DEFAULT_SETTINGS_SIZE);
