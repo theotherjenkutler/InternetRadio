@@ -5,7 +5,7 @@
 #define _DEFAULT_SETTINGS_H_
 
 const char *default_settings =
-    "wifi_router_SSID = YourLocalSSID\n"
+    "wifi_router_SSID = \n"
     "wifi_router_password = YourLocalPassword\n"
     "wifi_toolkit_hostname = WaveFarmToolkit\n"
     "wifi_toolkit_AP_SSID = WaveFarmToolkit_AP\n"

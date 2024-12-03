@@ -1,21 +1,48 @@
+
+(0)
+JS stuff for handling mobile
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    // We are now in the background
+    // close the WS connection
+  } else {
+    // We have just come into the foreground
+    // reconnect to the WS
+  }
+});
+
+CHANGE the focus handler so that it check for a connection and only
+reconnects if we are disconnected.
+
 ------------------------------------------------------------------------------
 (1)
 Add Kiosk mode
 
-How about this:
+(a) kiosk_mode = 0 | 1 .. set via a checkbox in the setting html code
 
-if the transmit icy url == "" then we don't connect to the icy server
+(b) if the transmit icy url == "" then we don't connect to an icy server
+but we still stream through mp3 to the wifi server
 
-transmitter mode streams to icecast and does config page
+(c) when the wifi server starts up it notes the startup ..
+    _server_start_time = millis();
+    _server_two_minute_timeout = false;
+    _server_use_kiosk_page = false;
 
-kiosk mode streams to icecase and does config for 2 mins, then kiosk
+(d) when wifi server runs ..
+    if (!_server_two_minute_timeout) {
+        now = millis();
+        if ((now - _server_start_time) > (120*1000)) {
+            _server_two_minute_timeout = true;
+            if (SettingItem::findUInt("kiosk_mode_is_on", 0)) {
+                _server_use_kiosk_page = true;
+            }
+        }
+    }
 
-- boots in the same way as transmitter mode
-- waits for 2 minutes and then switches from configuration mode to kiosk mode
-- while in configuration mode you can set the mode back to transmitter and then
-it will stay in config mode
-- while in transmitter mode you can switch to kiosk and it will switch in
-30 seconds
+(e) kiosk.html
+Use the play button + audio tag like in the config page, but make the
+audio tag become visible only after the play button has been pressed.
 
 ------------------------------------------------------------------------------
 (DONE)

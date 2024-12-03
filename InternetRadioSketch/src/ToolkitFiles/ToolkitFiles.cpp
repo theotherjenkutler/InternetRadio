@@ -2,10 +2,9 @@
 // ToolkitFiles.cpp
 
 #include <FS.h>
-//#include <SPIFFS.h>
-#include <LITTLEFS.h>
 
-#define TOOLFS LITTLEFS
+#include <LittleFS.h>
+#define TOOLFS LittleFS
 
 #include "ToolkitFiles.h"
 
@@ -23,7 +22,6 @@ boolean ToolkitFiles::begin()
         }
     }
     return true; // formats the flash if it isn't formatted
-//    bool formatted = SPIFFS.format();
 } // returns false if the file system doesn't mount
 
 //

@@ -2,7 +2,6 @@
 // ToolkitFiles.h
 
 #include <FS.h>
-//#include <SPIFFS.h>
 
 #ifndef ToolkitFiles_H
 #define ToolkitFiles_H
