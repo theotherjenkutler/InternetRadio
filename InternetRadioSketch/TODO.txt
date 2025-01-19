@@ -1,20 +1,4 @@
 
-(0)
-JS stuff for handling mobile
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    // We are now in the background
-    // close the WS connection
-  } else {
-    // We have just come into the foreground
-    // reconnect to the WS
-  }
-});
-
-CHANGE the focus handler so that it check for a connection and only
-reconnects if we are disconnected.
-
 ------------------------------------------------------------------------------
 (1)
 Add Kiosk mode
@@ -43,6 +27,36 @@ but we still stream through mp3 to the wifi server
 (e) kiosk.html
 Use the play button + audio tag like in the config page, but make the
 audio tag become visible only after the play button has been pressed.
+
+------------------------------------------------------------------------------
+(2)
+Physical controls:
+Peter your "listening mode selection" switch aka browser or icecast will be
+coming in hot on pin 15 and the volume control pot will be on pin 35
+
+------------------------------------------------------------------------------
+(DONE)
+Newer way to do load-on-play with the audio element
+
+<audio controls="controls" preload="none">
+</audio>
+
+------------------------------------------------------------------------------
+(DONE)
+JS stuff for handling mobile
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    // We are now in the background
+    // close the WS connection
+  } else {
+    // We have just come into the foreground
+    // reconnect to the WS
+  }
+});
+
+CHANGE the focus handler so that it checks for a connection and only
+reconnects if we are disconnected.
 
 ------------------------------------------------------------------------------
 (DONE)

@@ -52,11 +52,11 @@ void Streamer::encoder_setup()
     begin(); // VLSI 1063a
 
     // reset and check status for the VS1053
-    player1053.reset();
-    Serial.print("VS1053 status: ");
-    Serial.println(player1053.getStatus());
-    player1053.setPlaybackVolume(
-        SettingItem::findFloat("listen_volume", 0.9));
+//    player1053.reset();
+//    Serial.print("VS1053 status: ");
+//    Serial.println(player1053.getStatus());
+//    player1053.setPlaybackVolume(
+//        SettingItem::findFloat("listen_volume", 0.9));
 
     // reset and check status for the VS1063
     reset();

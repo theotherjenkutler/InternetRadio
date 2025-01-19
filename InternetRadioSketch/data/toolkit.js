@@ -225,13 +225,28 @@ class toolkitSocket
         window.addEventListener("focus", function(event)
         {
             console.log("window focus handler");
-            if (toolkitSocket.isConnected()) {
-                toolkitSocket.close();
+            if (!toolkitSocket.isConnected()) {
+                setTimeout(function() {
+                    toolkitSocket.open();
+                }, 500);
             }
-            setTimeout(function() {
-                toolkitSocket.open();
-            }, 500);
-        }, false);
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") {
+                // We are now in the background
+                // close the WS connection
+                if (toolkitSocket.isConnected()) {
+                    toolkitSocket.close();
+                }
+            } else {
+                // We have just come into the foreground
+                // reconnect to the WS
+                setTimeout(function() {
+                    toolkitSocket.open();
+                }, 500);
+            }
+        });
     }
 }
 //
