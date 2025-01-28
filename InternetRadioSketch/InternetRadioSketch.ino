@@ -20,6 +20,12 @@
 #include "src/ToolkitFiles/ToolkitFiles.h"
 #include "src/ToolkitWiFi/ToolkitWiFi_Server.h"
 
+// Include hardware controls (volume knob and mode switch)
+#if USE_PIN_CONTROLS
+#include "PinControls.h"
+PinControls pins_thing;
+#endif
+
 // These objects connect us with the Toolkit VLSI and WiFi Server
 Streamer stream_thing;
 ToolkitWiFi_Server wifi_thing;
@@ -109,6 +115,18 @@ void icy_task(void *params)
   }  
 }
 
+#if USE_PIN_CONTROLS
+void pins_task(void *params)
+{
+  const int delay_in_ms = 250;  // 4 times a second
+  while (true) {
+    vTaskDelay(portTICK_PERIOD_MS * delay_in_ms);
+    pins_thing.updateVolume();
+    pins_thing.getSwitchState();
+  }
+}
+#endif
+
 void start_rtos_tasks()
 {
   xTaskCreatePinnedToCore(server_task, "Server Task", 4096, NULL, 1, NULL, 0); // changed to processor 0 !! from 1
@@ -121,6 +139,10 @@ void start_rtos_tasks()
       xTaskCreatePinnedToCore(icy_task, "Icy Reconnect Task", 4096, NULL, 1, NULL, 0); // changed to processor 0 !! from 1
     }
   }
+
+#if USE_PIN_CONTROLS
+  xTaskCreatePinnedToCore(pins_task, "Hardware Pins Task", 2048, NULL, 1, NULL, 0);
+#endif
 
   Serial.println("Toolkit started up with RTOS tasks");
   //Serial.printf("Tick timing is %u ticks per millisecond\n", portTICK_PERIOD_MS);
@@ -252,7 +274,12 @@ void setup() {
 
   wifi_thing.setMP3DataStreamFunction(Streamer::getNextOutBuffer);
   wifi_thing.setWSLiveChangesFunction(update_volumes);
-  
+
+
+#if USE_PIN_CONTROLS
+  pins_thing.begin();
+#endif 
+
   //--------------------------------------------------
   // RTOS
 #if USE_RTOS_TASKS
