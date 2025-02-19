@@ -141,7 +141,7 @@ void start_rtos_tasks()
   }
 
 #if USE_PIN_CONTROLS
-  xTaskCreatePinnedToCore(pins_task, "Hardware Pins Task", 2048, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(pins_task, "Hardware Pins Task", 4096, NULL, 1, NULL, 0);
 #endif
 
   Serial.println("Toolkit started up with RTOS tasks");

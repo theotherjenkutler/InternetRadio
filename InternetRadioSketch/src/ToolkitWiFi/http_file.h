@@ -13,6 +13,8 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     const char *default_index, size_t default_index_size,
     char *buffer, size_t max_size);
 
+void http_turnOnKioskMode(int onNotOff);
+
 #endif
 
 //

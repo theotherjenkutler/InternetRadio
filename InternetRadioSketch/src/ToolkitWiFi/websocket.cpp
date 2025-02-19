@@ -318,4 +318,12 @@ boolean websocket_handleIncoming(
 }
 
 //
+// Send a setting to all WS clients
+
+void websocket_broadcast(const char *name, const char *value)
+{
+    websocket_echoToOthers(0, name, value);
+}
+
+//
 // END OF websocket.cpp

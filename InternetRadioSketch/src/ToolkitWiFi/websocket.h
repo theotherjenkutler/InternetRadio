@@ -31,6 +31,10 @@ void websocket_sendSettings(ToolkitWiFi_Client *twfc);
 boolean websocket_handleIncoming(ToolkitWiFi_Client *twfc,
     const char *buffer, size_t size);
 
+//
+// Send a setting to all WS clients
+void websocket_broadcast(const char *name, const char *value);
+
 #endif
 
 //

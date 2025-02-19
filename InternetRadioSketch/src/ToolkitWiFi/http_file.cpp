@@ -8,6 +8,18 @@
 
 //------------------------------------------------------------------
 //
+// Kiosk mode forces all .html extensions to become kiosk.html
+//
+
+static boolean isKioskOn = false;
+
+void http_turnOnKioskMode(int onNotOff)
+{
+    isKioskOn = onNotOff;
+}
+
+//------------------------------------------------------------------
+//
 // HTTP RESPONSE .. send header and content
 //
 
@@ -413,6 +425,19 @@ static uint32_t match_filename(const char *path)
     return FILE_IS_ANY;
 }
 
+static boolean is_file_html(const char *path)
+{
+    const char *dot = strrchr(path, '.');
+    if (dot) {
+        if (0==strcmp(".js",dot)) {
+            return false;
+        } else if (0==strcmp(".css",dot)) {
+            return false;
+        }
+    }
+    return true; // everything forwards to html except js and css
+}
+
 void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     const char *default_index, size_t default_index_size,
     char *buffer, size_t max_size)
@@ -423,6 +448,14 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     size_t size = 0;
     char *data = NULL;
     uint32_t type = match_filename(path);
+
+    if (isKioskOn) {
+        // over ride html files when we are in kiosk mode
+        if (is_file_html(path)) {
+            path = "/kiosk.html";
+            type = FILE_IS_ANY;
+        }
+    }
 
     // upload needs to set data and size directly
     // index if it doesn't exist needs to set data and size directly

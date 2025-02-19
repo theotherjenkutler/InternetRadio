@@ -2,6 +2,9 @@
 // PinControls.cpp
 
 #include "PinControls.h"
+#include "src/ToolkitFiles/ToolkitFiles.h"
+#include "src/ToolkitWiFi/websocket.h"
+#include "src/ToolkitWiFi/http_file.h"
 
 PinControls::PinControls()
 {
@@ -21,7 +24,7 @@ void PinControls::begin()
 //    adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
 }
 
-void PinControls::updateVolume()
+static double readVolumeKnob()
 {
     static double old_v = -1.0;
     double v = analogRead(GPIO_VOLUME);
@@ -29,15 +32,36 @@ void PinControls::updateVolume()
     if (v < 6) { v = 6; }
     v = v - 6.0;
     v = v / 40.80;  // 0.0 to 100.0
-    int vi = v;
+
+    // The analog read has a lot of noise on it.
+    // To filter this out, change the volume to an integer with a 
+    // range of approx. 20
+    v = v / 5.0;    // 0.0 to 20.0
+    int vi = v;     // this gets rid of noise on the line
     v = vi;
-    v = v / 100.0;
+    v = v / 20.0;
+    return v;
+}
+
+void PinControls::updateVolume()
+{
+    static double old_v = -1.0;
+    double v = readVolumeKnob();
     if (v != old_v) {
-        Serial.printf("Hardware volume =  %2.3f\n", v);
+        if (-1.0 != old_v) {
+            // send it to listen_volume, update VLSI, update WS clients
+            // send it as a WS message so that it propogates everywhere
+            const char *name = "listen_volume";
+            static char value[32];
+            sprintf(value, "%1.2f", v);
+            SettingItem::updateOrAdd(name, value);
+            ToolkitFiles::saveSettings();
+            websocket_broadcast(name, (const char *) value);
+            ToolkitWiFi_Server::handleWSLiveChanges(name, value);
+            Serial.printf("Hardware volume =  %1.2f\n", v);
+        }
         old_v = v;
-        // send it to listen_volume, update VLSI, update WS clients
-        // send it as a WS message so that it propogates everywhere
-    }
+    }  
 }
 
 boolean PinControls::getSwitchState()
@@ -47,7 +71,8 @@ boolean PinControls::getSwitchState()
     if (s != old_s) {
         Serial.printf("Hardware switch = %d\n", s);
         old_s = s;
-        // TODO: what do want to use the switch for ?? kiosk mode maybe ??
+        // the switch will turn on kiosk mode
+        http_turnOnKioskMode(s);
     }
 }
 

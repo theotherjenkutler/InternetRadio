@@ -3,7 +3,11 @@
 (1)
 Add Kiosk mode
 
-(a) kiosk_mode = 0 | 1 .. set via a checkbox in the setting html code
+(a) kiosk_mode = 0 | 1 .. set via the hardware switch
+if the hardware switch is ON (1) and there is a 'kiosk.html' file,
+then serve kiosk.html .. otherwise operate with the normal
+index.html file. The kiosk will stream whichever listen/transmit
+stream is running through the system.
 
 (b) if the transmit icy url == "" then we don't connect to an icy server
 but we still stream through mp3 to the wifi server
@@ -29,7 +33,7 @@ Use the play button + audio tag like in the config page, but make the
 audio tag become visible only after the play button has been pressed.
 
 ------------------------------------------------------------------------------
-(2)
+(DONE)
 Physical controls:
 Peter your "listening mode selection" switch aka browser or icecast will be
 coming in hot on pin 15 and the volume control pot will be on pin 35
