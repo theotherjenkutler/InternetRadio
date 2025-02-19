@@ -23,7 +23,7 @@ typedef struct {
 #include "default_files/index_html.h"
 
 static default_file_data default_index_html = {
-    "index.html", data_index_html
+    "/index.html", data_index_html
 };
 
 //
@@ -32,7 +32,7 @@ static default_file_data default_index_html = {
 #include "default_files/toolkit_js.h"
 
 static default_file_data default_toolkit_js = {
-    "toolkit.js", data_toolkit_js
+    "/toolkit.js", data_toolkit_js
 };
 
 //
@@ -41,7 +41,7 @@ static default_file_data default_toolkit_js = {
 #include "default_files/toolkit_css.h"
 
 static default_file_data default_toolkit_css = {
-    "toolkit.css", data_toolkit_css
+    "/toolkit.css", data_toolkit_css
 };
 
 //
@@ -50,7 +50,7 @@ static default_file_data default_toolkit_css = {
 #include "default_files/upload_html.h"
 
 static default_file_data default_upload_html = {
-    "upload.html", data_upload_html
+    "/upload.html", data_upload_html
 };
 
 //
@@ -59,7 +59,7 @@ static default_file_data default_upload_html = {
 #include "default_files/kiosk_html.h"
 
 static default_file_data default_kiosk_html = {
-    "kiosk.html", data_kiosk_html
+    "/kiosk.html", data_kiosk_html
 };
 
 //---------------------------------------------------------------
@@ -75,6 +75,18 @@ static default_file_data *files[] = {
     &default_kiosk_html,
     0
 };
+
+boolean default_file_exists(const char *path)
+{
+    default_file_data **list = files;
+    while (*list) {
+        if (0 == strcmp((*list)->name, path)) {
+            return true;
+        }
+        list++;
+    }
+    return false;
+}
 
 const char *default_files_find(const char *path, size_t *length)
 {

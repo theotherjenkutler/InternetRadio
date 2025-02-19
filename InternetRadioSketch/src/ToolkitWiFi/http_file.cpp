@@ -5,6 +5,7 @@
 #include "../parsingTools.h"
 #include "ToolkitWiFi_Client.h"
 #include "../ToolkitFiles/ToolkitFiles.h"
+#include "default_files.h"
 
 //------------------------------------------------------------------
 //
@@ -438,6 +439,14 @@ static boolean is_file_html(const char *path)
     return true; // everything forwards to html except js and css
 }
 
+static boolean file_exists(const char *path)
+{
+    if (ToolkitFiles::fileExists(path)) {
+        return true;
+    }
+    return default_file_exists(path);
+}
+
 void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     const char *default_index, size_t default_index_size,
     char *buffer, size_t max_size)
@@ -445,8 +454,8 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     // fetch the file from *path, set the mime-type and content headers
         // the spiffs read will pull the file into an internal 4kB buffer
         // then send those bytes directly to the client
-    size_t size = 0;
-    char *data = NULL;
+//    size_t size = 0;
+//    char *data = NULL;
     uint32_t type = match_filename(path);
 
     if (isKioskOn) {
@@ -468,17 +477,17 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     }
 
     if (FILE_IS_ANY==type) {
-        if (!ToolkitFiles::fileExists(path)) {
+        if (!file_exists(path)) {
             path = "/index.html";
             type = FILE_IS_INDEX;
         }
     }
 
-    if (FILE_IS_INDEX==type) {
-        if(!ToolkitFiles::fileExists(path)) {
-            type = FILE_IS_UPLOAD;
-        }
-    }
+    // if (FILE_IS_INDEX==type) {
+    //     if(!ToolkitFiles::fileExists(path)) {
+    //         type = FILE_IS_UPLOAD;
+    //     }
+    // }
 
     // I think at this point it is one of
     //  FILE_IS_ANY .. exists on the flash drive
@@ -486,29 +495,32 @@ void http_handleGetRequest(ToolkitWiFi_Client *twfc, const char *path,
     //  FILE_IS_FAVICON .. may or may not exist on the flash drive
     //  FILE_IS_UPLOAD .. use the _default if it exists
     if (FILE_IS_UPLOAD==type) {
-        if (default_index && default_index_size) {
-            http_send(twfc, default_index, default_index_size,
-                RESPONSE_OKAY, "text/html");
-        } else {
-            http_send_404(twfc);
-        }
-    } else {
-        File f = ToolkitFiles::fileOpen(path, FILE_READ);
-        if (f) {
-            uint32_t content_length = f.size();
-            const char *mime = mime_type(path);
-            http_send_header(twfc, content_length, RESPONSE_OKAY, mime);
-            // now read the file in chunks until it all sent
-            int avail;
-            size_t actual;
-            while ((avail=f.available()) > 0) {
-                if (avail > max_size) {
-                    avail = max_size;
-                }
-                actual = f.readBytes(buffer, avail);
-                http_send_data_chunk(twfc, buffer, actual);
+        path = "/upload.html";
+    }
+
+    File f = ToolkitFiles::fileOpen(path, FILE_READ);
+    if (f) {
+        uint32_t content_length = f.size();
+        const char *mime = mime_type(path);
+        http_send_header(twfc, content_length, RESPONSE_OKAY, mime);
+        // now read the file in chunks until it all sent
+        int avail;
+        size_t actual;
+        while ((avail=f.available()) > 0) {
+            if (avail > max_size) {
+                avail = max_size;
             }
-            f.close();
+            actual = f.readBytes(buffer, avail);
+            http_send_data_chunk(twfc, buffer, actual);
+        }
+        f.close();
+    } else {
+        size_t size;
+        const char *data = default_files_find(path, &size);
+        if (data) {
+            const char *mime = mime_type(path);
+            http_send_header(twfc, size, RESPONSE_OKAY, mime);
+            http_send_data_chunk(twfc, data, size);
         } else {
             http_send_404(twfc);
         }

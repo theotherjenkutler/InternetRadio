@@ -6,6 +6,7 @@
 
 #include <Arduino.h>
 
+boolean default_file_exists(const char *path);
 const char *default_files_find(const char *path, size_t *length);
 
 #endif
